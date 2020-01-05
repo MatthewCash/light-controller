@@ -1,18 +1,20 @@
 {
-  "name": "light-server",
-  "version": "1.0.0",
-  "description": "",
-  "main": "main.",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Matthew_Cash",
-  "license": "ISC",
-  "dependencies": {
-    "body-parser": "^1.19.0",
-    "cors": "^2.8.5",
-    "express": "^4.17.1",
-    "tplink-smarthome-api": "^1.3.0",
-    "ws": "^7.2.1"
-  }
+    "name": "light-server",
+    "version": "1.0.0",
+    "description": "",
+    "main": "main.ts",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "ts-node main.ts",
+        "dev": "ts-node-dev main.ts"
+    },
+    "author": "Matthew_Cash",
+    "license": "ISC",
+    "dependencies": {
+        "body-parser": "^1.19.0",
+        "cors": "^2.8.5",
+        "express": "^4.17.1",
+        "tplink-smarthome-api": "^1.3.0",
+        "ws": "^7.2.1"
+    }
 }
