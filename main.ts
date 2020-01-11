@@ -111,6 +111,14 @@ client.on('bulb-new', Bulb => {
     console.log('Found Bulb: ' + Bulb.alias);
 });
 
+client.on('bulb-online', Bulb => {
+    if (!Bulb.alias.includes('Bulb ')) return;
+    if (!bulbs.some(cachedBulb => cachedBulb.id === Bulb.id)) {
+        console.log('Found Bulb Again: ' + Bulb.alias);
+        bulbs.push(Bulb);
+    }
+});
+
 console.log('Connecting to Bulbs');
 client.startDiscovery();
 
@@ -135,7 +143,7 @@ ws.on('connection', async Client => {
         if (data?.cycle != null) setCycle(data.cycle);
         if (data?.brightness != null) setBrightness(data.brightness, data.adjust);
     });
-    Client.on('pong', () => void (Client.alive = true));
+    Client.on('pong', () => (Client.alive = true));
 });
 
 setInterval(() => {
@@ -214,7 +222,26 @@ setInterval(() => {
 
 setInterval(async () => {
     if (!bulbs[0]) return;
-    status = await bulbs[0].lighting.getLightState();
+    status = (await new Promise(async (resolve, reject) => {
+        let resolved = false;
+        setTimeout(() => {
+            if (resolved) return;
+            console.log('Reloading Bulbs');
+            bulbs.length = 0;
+        }, 10000);
+
+        let statusPromises: Promise<status>[] = [];
+
+        for (let Bulb of bulbs) {
+            statusPromises.push(Bulb.lighting.getLightState());
+        }
+
+        const [data] = await Promise.all(statusPromises);
+
+        resolved = true;
+        resolve(data);
+    })) as status;
+
     status.cycle = status.on_off ? cycle : false;
     if (status.cycle) status.hue += 50;
     ws.clients.forEach(Client => Client.send(JSON.stringify(status)));
