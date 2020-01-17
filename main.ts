@@ -90,13 +90,7 @@ const processBrightnessQueue = async (): Promise<void> => {
         if (brightness < 0) brightness = 0;
         if (brightness > 100) brightness = 100;
 
-        let adjustmentPromises: Promise<void>[] = [];
-
-        for (let Bulb of bulbs) {
-            adjustmentPromises.push(Bulb.lighting.setLightState({ on_off: true, brightness }));
-        }
-
-        await Promise.all(adjustmentPromises);
+        await Promise.all(bulbs.map(Bulb => Bulb.lighting.setLightState({ on_off: true, brightness })));
         brightnessQueue.shift();
     }
     processingQueue = false;
@@ -218,7 +212,7 @@ setInterval(() => {
         });
     });
     if (color >= 360) color = 0;
-}, 2000);
+}, 3000);
 
 setInterval(async () => {
     if (!bulbs[0]) return;
@@ -230,13 +224,7 @@ setInterval(async () => {
             bulbs.length = 0;
         }, 10000);
 
-        let statusPromises: Promise<status>[] = [];
-
-        for (let Bulb of bulbs) {
-            statusPromises.push(Bulb.lighting.getLightState());
-        }
-
-        const [data] = await Promise.all(statusPromises);
+        const [data] = await Promise.all(bulbs.map(Bulb => Bulb.lighting.getLightState()));
 
         resolved = true;
         resolve(data);
