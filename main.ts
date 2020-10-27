@@ -16,8 +16,8 @@ let color = 0;
 let cycleTimer = setInterval(() => {
     if (!cycle) return;
     color += 60;
-    bulbs.forEach(async (Bulb, index) => {
-        Bulb.lighting
+    bulbs.forEach((bulb, index) => {
+        bulb.lighting
             .setLightState({
                 transition_period: cycleSpeed / 6 - cycleSpeed / 60,
                 hue: color,
@@ -25,7 +25,7 @@ let cycleTimer = setInterval(() => {
                 color_temp: 0
             })
             .catch(() => {
-                console.log('ERROR SETTING CYCLE BULB', index, Bulb.alias);
+                console.log('ERROR SETTING CYCLE BULB', index, bulb.alias);
 
                 console.log(bulbs.length);
                 bulbs.forEach(Bulb => console.log(Bulb.alias));
@@ -33,7 +33,7 @@ let cycleTimer = setInterval(() => {
                 const oldBulb = bulbs.splice(index, 1)[0];
                 oldBulb?.closeConnection().catch(() => {});
 
-                console.log(oldBulb.alias, Bulb.alias);
+                console.log(oldBulb.alias, bulb.alias);
 
                 console.log(bulbs.length);
                 bulbs.forEach(Bulb => console.log(Bulb.alias));
@@ -49,8 +49,8 @@ let cycleTimer = setInterval(() => {
 
 const setColor = (color: number): void => {
     cycle = false;
-    bulbs.forEach(async Bulb => {
-        Bulb.lighting.setLightState({
+    bulbs.forEach(bulb => {
+        bulb.lighting.setLightState({
             transition_period: 1000,
             hue: color,
             saturation: 100,
@@ -68,8 +68,8 @@ const setWhite = (cold?: boolean | number): void => {
     if (cold < 2500) cold = 2500;
     if (cold > 9000) cold = 9000;
 
-    bulbs.forEach(Bulb => {
-        Bulb.lighting.setLightState({
+    bulbs.forEach(bulb => {
+        bulb.lighting.setLightState({
             transition_period: 1000,
             color_temp: cold,
             on_off: true
@@ -78,8 +78,8 @@ const setWhite = (cold?: boolean | number): void => {
 };
 
 const setPower = (power: boolean): void => {
-    bulbs.forEach(Bulb => {
-        Bulb.lighting.setLightState({
+    bulbs.forEach(bulb => {
+        bulb.lighting.setLightState({
             on_off: power
         });
     });
@@ -87,8 +87,8 @@ const setPower = (power: boolean): void => {
 
 const setCycle = (goCycle: boolean): void => {
     if (goCycle) {
-        bulbs.forEach(Bulb => {
-            Bulb.lighting.setLightState({
+        bulbs.forEach(bulb => {
+            bulb.lighting.setLightState({
                 color_temp: 0,
                 on_off: true
             });
@@ -112,8 +112,8 @@ const setBrightness = async (
     if (brightness < 0) brightness = 0;
     if (brightness > 100) brightness = 100;
 
-    bulbs.forEach(Bulb => {
-        Bulb.lighting.setLightState({
+    bulbs.forEach(bulb => {
+        bulb.lighting.setLightState({
             brightness,
             on_off: true
         });
@@ -134,8 +134,8 @@ const processBrightnessQueue = async (): Promise<void> => {
         if (brightness > 100) brightness = 100;
 
         await Promise.all(
-            bulbs.map(Bulb =>
-                Bulb.lighting.setLightState({ on_off: true, brightness })
+            bulbs.map(bulb =>
+                bulb.lighting.setLightState({ on_off: true, brightness })
             )
         );
         brightnessQueue.shift();
@@ -153,8 +153,8 @@ const setSpeed = async (speed: number): Promise<void> => {
     cycleTimer = setInterval(() => {
         if (!cycle) return;
         color += 60;
-        bulbs.forEach(async Bulb => {
-            Bulb.lighting.setLightState({
+        bulbs.forEach(bulb => {
+            bulb.lighting.setLightState({
                 transition_period: cycleSpeed / 6 - cycleSpeed / 60,
                 hue: color,
                 saturation: 100,
@@ -168,17 +168,17 @@ const setSpeed = async (speed: number): Promise<void> => {
 const client = new Client();
 let bulbs = [];
 
-client.on('bulb-new', Bulb => {
-    if (!Bulb.alias.includes('Bulb ')) return;
-    bulbs.push(Bulb);
-    console.log('Found Bulb: ' + Bulb.alias);
+client.on('bulb-new', bulb => {
+    if (!bulb.alias.includes('Bulb ')) return;
+    bulbs.push(bulb);
+    console.log('Found Bulb: ' + bulb.alias);
 });
 
-client.on('bulb-online', Bulb => {
-    if (!Bulb.alias.includes('Bulb ')) return;
-    if (!bulbs.some(cachedBulb => cachedBulb.id === Bulb.id)) {
-        console.log('Found Bulb Again: ' + Bulb.alias);
-        bulbs.push(Bulb);
+client.on('bulb-online', bulb => {
+    if (!bulb.alias.includes('Bulb ')) return;
+    if (!bulbs.some(cachedBulb => cachedBulb.id === bulb.id)) {
+        console.log('Found Bulb Again: ' + bulb.alias);
+        bulbs.push(bulb);
     }
 });
 
@@ -199,14 +199,14 @@ let status: status;
 
 const ws = new WebSocket.Server({ port: 1728 });
 
-ws.on('connection', async Client => {
-    Client.alive = true;
-    Client.on('message', async message => {
+ws.on('connection', client => {
+    client.alive = true;
+    client.on('message', async message => {
         let data;
         try {
             data = JSON.parse(message);
         } catch {
-            Client.send('ERROR: Invalid JSON!');
+            client.send('ERROR: Invalid JSON!');
         }
 
         if (data?.color != null) setColor(data.color);
@@ -217,7 +217,7 @@ ws.on('connection', async Client => {
             setBrightness(data.brightness, data.adjust);
         if (data?.speed != null) setSpeed(data.speed);
     });
-    Client.on('pong', () => (Client.alive = true));
+    client.on('pong', () => (client.alive = true));
 });
 
 setInterval(() => {
@@ -311,9 +311,9 @@ setInterval(async () => {
 }, 1000);
 
 // Send Status to WS Clients
-setInterval(async () => {
+setInterval(() => {
     if (!bulbs[0] || !status) {
-        return ws.clients.forEach(Client => Client.send('No Bulbs Detected!'));
+        return ws.clients.forEach(client => client.send('No Bulbs Detected!'));
     }
 
     status.cycle = status.on_off ? cycle : false;
