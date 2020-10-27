@@ -1,13 +1,51 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { Client } from 'tplink-smarthome-api';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import WebSocket from 'ws';
+import { Expression } from 'typescript';
 
 let cycle = false;
+let cycleSpeed = 18000;
 
-let brightnessQueue: number[] = [];
+const brightnessQueue: number[] = [];
 let processingQueue = false;
+
+let color = 0;
+
+let cycleTimer = setInterval(() => {
+    if (!cycle) return;
+    color += 60;
+    bulbs.forEach(async (Bulb, index) => {
+        Bulb.lighting
+            .setLightState({
+                transition_period: cycleSpeed / 6 - cycleSpeed / 60,
+                hue: color,
+                saturation: 100,
+                color_temp: 0
+            })
+            .catch(() => {
+                console.log('ERROR SETTING CYCLE BULB', index, Bulb.alias);
+
+                console.log(bulbs.length);
+                bulbs.forEach(Bulb => console.log(Bulb.alias));
+
+                const oldBulb = bulbs.splice(index, 1)[0];
+                oldBulb?.closeConnection().catch(() => {});
+
+                console.log(oldBulb.alias, Bulb.alias);
+
+                console.log(bulbs.length);
+                bulbs.forEach(Bulb => console.log(Bulb.alias));
+
+                client.startDiscovery({
+                    discoveryInterval: 1000,
+                    broadcast: '192.168.1.255'
+                });
+            });
+    });
+    if (color >= 360) color = 0;
+}, cycleSpeed / 6);
 
 const setColor = (color: number): void => {
     cycle = false;
@@ -61,7 +99,10 @@ const setCycle = (goCycle: boolean): void => {
     }
 };
 
-const setBrightness = async (brightness: number, adjust: boolean = false): Promise<void> => {
+const setBrightness = async (
+    brightness: number,
+    adjust: boolean = false
+): Promise<void> => {
     if (adjust) {
         brightnessQueue.push(brightness);
         if (!processingQueue) processBrightnessQueue();
@@ -82,18 +123,46 @@ const setBrightness = async (brightness: number, adjust: boolean = false): Promi
 const processBrightnessQueue = async (): Promise<void> => {
     processingQueue = true;
     while (brightnessQueue.length > 0) {
-        let adjustment = brightnessQueue[0];
+        const adjustment = brightnessQueue[0];
 
-        let { brightness: currentBrightness } = await bulbs[0].lighting.getLightState();
+        let {
+            brightness: currentBrightness
+        } = await bulbs[0].lighting.getLightState();
         let brightness = adjustment + currentBrightness;
 
         if (brightness < 0) brightness = 0;
         if (brightness > 100) brightness = 100;
 
-        await Promise.all(bulbs.map(Bulb => Bulb.lighting.setLightState({ on_off: true, brightness })));
+        await Promise.all(
+            bulbs.map(Bulb =>
+                Bulb.lighting.setLightState({ on_off: true, brightness })
+            )
+        );
         brightnessQueue.shift();
     }
     processingQueue = false;
+};
+
+const setSpeed = async (speed: number): Promise<void> => {
+    if (speed < 6000) speed = 6000;
+    if (speed > 24900) speed = 24900;
+
+    cycleSpeed = speed;
+    clearInterval(cycleTimer);
+
+    cycleTimer = setInterval(() => {
+        if (!cycle) return;
+        color += 60;
+        bulbs.forEach(async Bulb => {
+            Bulb.lighting.setLightState({
+                transition_period: cycleSpeed / 6 - cycleSpeed / 60,
+                hue: color,
+                saturation: 100,
+                color_temp: 0
+            });
+        });
+        if (color >= 360) color = 0;
+    }, speed / 6);
 };
 
 const client = new Client();
@@ -114,12 +183,16 @@ client.on('bulb-online', Bulb => {
 });
 
 console.log('Connecting to Bulbs');
-client.startDiscovery();
+client.startDiscovery({
+    discoveryInterval: 1000,
+    broadcast: '192.168.1.255'
+});
 
 interface status {
     hue: number;
     cycle: boolean;
     on_off: boolean;
+    speed: number;
 }
 
 let status: status;
@@ -129,13 +202,20 @@ const ws = new WebSocket.Server({ port: 1728 });
 ws.on('connection', async Client => {
     Client.alive = true;
     Client.on('message', async message => {
-        let data = JSON.parse(message);
+        let data;
+        try {
+            data = JSON.parse(message);
+        } catch {
+            Client.send('ERROR: Invalid JSON!');
+        }
 
         if (data?.color != null) setColor(data.color);
         if (data?.white != null) setWhite(data.white);
         if (data?.power != null) setPower(data.power);
         if (data?.cycle != null) setCycle(data.cycle);
-        if (data?.brightness != null) setBrightness(data.brightness, data.adjust);
+        if (data?.brightness != null)
+            setBrightness(data.brightness, data.adjust);
+        if (data?.speed != null) setSpeed(data.speed);
     });
     Client.on('pong', () => (Client.alive = true));
 });
@@ -155,7 +235,14 @@ app.use(bodyParser.json());
 app.use(
     cors({
         origin: (origin, callback) => {
-            if (['http://localhost:8080', 'http://192.168.1.203:8080', 'http://127.0.0.1'].includes(origin))
+            if (
+                [
+                    'http://localhost:8080',
+                    'http://192.168.1.203:8080',
+                    'http://127.0.0.1',
+                    'https://matthewcash.github.io'
+                ].includes(origin)
+            )
                 return callback(null, true);
             if (!origin) return callback(null, true);
             console.log(origin + ' failed CORS!');
@@ -164,73 +251,73 @@ app.use(
     })
 );
 
-app.get('/status', async (req, res, next) => {
+app.get('/status', (req: Request, res: Response) => {
     if (!bulbs[0]) return res.status(425).send('Bulbs Initializing...');
     res.json(status);
 });
 
-app.post('/color', async (req, res, next) => {
-    if (req.body?.color == null) return res.status(400).send('Color not specified!');
+app.post('/color', (req: Request, res: Response) => {
+    if (req.body?.color == null)
+        return res.status(400).send('Color not specified!');
     setColor(req.body.color);
     return res.status(200).send('Success');
 });
 
-app.post('/white', async (req, res, next) => {
+app.post('/white', (req: Request, res: Response) => {
     setWhite(req?.body?.cold);
     return res.status(200).send('Success');
 });
 
-app.post('/power', async (req, res, next) => {
-    if (req.body?.power == null) return res.status(400).send('Power status not specified!');
+app.post('/power', (req: Request, res: Response) => {
+    if (req.body?.power == null)
+        return res.status(400).send('Power status not specified!');
     setPower(req.body.power);
     return res.status(200).send('Success');
 });
 
-app.post('/cycle', async (req, res, next) => {
-    if (req.body?.cycle == null) return res.status(400).send('Cycle status not specified!');
+app.post('/cycle', (req: Request, res: Response) => {
+    if (req.body?.cycle == null)
+        return res.status(400).send('Cycle status not specified!');
     setCycle(req.body.cycle);
     return res.status(200).send('Success');
 });
 
-app.post('/brightness', async (req, res, next) => {
-    if (req.body?.brightness == null) return res.status(400).send('Brightness not specified!');
+app.post('/brightness', (req: Request, res: Response) => {
+    if (req.body?.brightness == null)
+        return res.status(400).send('Brightness not specified!');
     setBrightness(req.body.brightness, req.body.adjust);
     return res.status(200).send('Success');
 });
 
-let color = 0;
+app.post('/speed', (req: Request, res: Response) => {
+    if (req.body?.speed == null)
+        return res.status(400).send('Speed not specified!');
+    setSpeed(req.body.speed);
+    return res.status(200).send('Success');
+});
 
-setInterval(() => {
-    if (!cycle) return;
-    color += 60;
-    bulbs.forEach(async Bulb => {
-        Bulb.lighting.setLightState({
-            transition_period: 1800,
-            hue: color,
-            saturation: 100,
-            color_temp: 0
-        });
-    });
-    if (color >= 360) color = 0;
-}, 3000);
-
+// Read Bulb Status
 setInterval(async () => {
     if (!bulbs[0]) return;
-    status = (await new Promise(async (resolve, reject) => {
-        let resolved = false;
-        setTimeout(() => {
-            if (resolved) return;
-            console.log('Reloading Bulbs');
-            bulbs.length = 0;
-        }, 10000);
+    status = await bulbs[0].lighting.getLightState().catch(e => {
+        console.log('ERROR READING STATUS!');
+        bulbs?.shift()?.closeConnection();
 
-        const [data] = await Promise.all(bulbs.map(Bulb => Bulb.lighting.getLightState()));
+        client.startDiscovery({
+            discoveryInterval: 1000,
+            broadcast: '192.168.1.255'
+        });
+    });
+}, 1000);
 
-        resolved = true;
-        resolve(data);
-    })) as status;
+// Send Status to WS Clients
+setInterval(async () => {
+    if (!bulbs[0] || !status) {
+        return ws.clients.forEach(Client => Client.send('No Bulbs Detected!'));
+    }
 
     status.cycle = status.on_off ? cycle : false;
+    status.speed = cycleSpeed;
     if (status.cycle) status.hue += 50;
     ws.clients.forEach(Client => Client.send(JSON.stringify(status)));
 }, 1000);
