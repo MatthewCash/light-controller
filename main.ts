@@ -31,7 +31,9 @@ let cycleTimer = setInterval(() => {
                 bulbs.forEach(Bulb => console.log(Bulb.alias));
 
                 const oldBulb = bulbs.splice(index, 1)[0];
-                oldBulb?.closeConnection().catch(() => {});
+                oldBulb?.closeConnection().catch(() => {
+                    console.log('Cannot close connections!');
+                });
 
                 console.log(oldBulb.alias, bulb.alias);
 
@@ -319,7 +321,7 @@ setInterval(() => {
     status.cycle = status.on_off ? cycle : false;
     status.speed = cycleSpeed;
     if (status.cycle) status.hue += 50;
-    ws.clients.forEach(Client => Client.send(JSON.stringify(status)));
+    ws.clients.forEach(client => client.send(JSON.stringify(status)));
 }, 1000);
 
 app.listen(1729, '0.0.0.0');
