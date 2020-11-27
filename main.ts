@@ -3,7 +3,6 @@ import { Client } from 'tplink-smarthome-api';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import WebSocket from 'ws';
-import { Expression } from 'typescript';
 
 let cycle = false;
 let cycleSpeed = 18000;
@@ -16,41 +15,12 @@ let color = 0;
 let cycleTimer = setInterval(() => {
     if (!cycle) return;
     color += 60;
-    bulbs.forEach((bulb, index) => {
-        bulb.lighting
-            .setLightState({
-                transition_period: cycleSpeed / 6 - cycleSpeed / 60,
-                hue: color,
-                saturation: 100,
-                color_temp: 0
-            })
-            .catch(() => {
-                console.log('ERROR SETTING CYCLE BULB', index, bulb.alias);
-
-                console.log(bulbs.length);
-                bulbs.forEach(Bulb => console.log(Bulb.alias));
-
-                const oldBulb = bulbs.splice(index, 1)[0];
-                oldBulb?.closeConnection().catch(() => {
-                    console.log('Cannot close connections!');
-                });
-
-                console.log(oldBulb.alias, bulb.alias);
-
-                console.log(bulbs.length);
-                bulbs.forEach(Bulb => console.log(Bulb.alias));
-
-                client.startDiscovery({
-                    discoveryInterval: 1000,
-                    broadcast: '192.168.1.255'
-                });
-            });
-    });
+    setColor(color, true);
     if (color >= 360) color = 0;
 }, cycleSpeed / 6);
 
-const setColor = (color: number): void => {
-    cycle = false;
+const setColor = (color: number, keepCycle = false): void => {
+    cycle = keepCycle;
     bulbs.forEach(bulb => {
         bulb.lighting.setLightState({
             transition_period: 1000,
