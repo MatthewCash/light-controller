@@ -19,20 +19,22 @@ let cycleTimer = setInterval(() => {
     if (color >= 360) color = 0;
 }, cycleSpeed / 6);
 
-const setColor = (color: number, keepCycle = false): void => {
+const setColor = async (color: number, keepCycle = false): Promise<void> => {
     cycle = keepCycle;
-    bulbs.forEach(bulb => {
-        bulb.lighting.setLightState({
-            transition_period: 1000,
-            hue: color,
-            saturation: 100,
-            color_temp: 0,
-            on_off: true
-        });
-    });
+    await Promise.all(
+        bulbs.map(bulb =>
+            bulb.lighting.setLightState({
+                transition_period: keepCycle ? cycleSpeed / 6 : 1000,
+                hue: color,
+                saturation: 100,
+                color_temp: 0,
+                on_off: true
+            })
+        )
+    );
 };
 
-const setWhite = (cold?: boolean | number): void => {
+const setWhite = async (cold?: boolean | number): Promise<void> => {
     cycle = false;
     if (cold === true) cold = 9000;
     if (cold === false) cold = 2500;
@@ -40,31 +42,37 @@ const setWhite = (cold?: boolean | number): void => {
     if (cold < 2500) cold = 2500;
     if (cold > 9000) cold = 9000;
 
-    bulbs.forEach(bulb => {
-        bulb.lighting.setLightState({
-            transition_period: 1000,
-            color_temp: cold,
-            on_off: true
-        });
-    });
-};
-
-const setPower = (power: boolean): void => {
-    bulbs.forEach(bulb => {
-        bulb.lighting.setLightState({
-            on_off: power
-        });
-    });
-};
-
-const setCycle = (goCycle: boolean): void => {
-    if (goCycle) {
-        bulbs.forEach(bulb => {
+    await Promise.all(
+        bulbs.map(bulb =>
             bulb.lighting.setLightState({
-                color_temp: 0,
+                transition_period: 1000,
+                color_temp: cold,
                 on_off: true
-            });
-        });
+            })
+        )
+    );
+};
+
+const setPower = async (power: boolean): Promise<void> => {
+    await Promise.all(
+        bulbs.map(bulb =>
+            bulb.lighting.setLightState({
+                on_off: power
+            })
+        )
+    );
+};
+
+const setCycle = async (shouldCycle: boolean): Promise<void> => {
+    if (shouldCycle) {
+        await Promise.all(
+            bulbs.map(bulb =>
+                bulb.lighting.setLightState({
+                    color_temp: 0,
+                    on_off: true
+                })
+            )
+        );
         cycle = true;
     } else {
         cycle = false;
@@ -84,12 +92,14 @@ const setBrightness = async (
     if (brightness < 0) brightness = 0;
     if (brightness > 100) brightness = 100;
 
-    bulbs.forEach(bulb => {
-        bulb.lighting.setLightState({
-            brightness,
-            on_off: true
-        });
-    });
+    await Promise.all(
+        bulbs.map(bulb =>
+            bulb.lighting.setLightState({
+                brightness,
+                on_off: true
+            })
+        )
+    );
 };
 
 const processBrightnessQueue = async (): Promise<void> => {
@@ -105,11 +115,12 @@ const processBrightnessQueue = async (): Promise<void> => {
         if (brightness < 0) brightness = 0;
         if (brightness > 100) brightness = 100;
 
-        await Promise.all(
-            bulbs.map(bulb =>
-                bulb.lighting.setLightState({ on_off: true, brightness })
-            )
-        );
+        // await Promise.all(
+        //     bulbs.map(bulb =>
+        //         bulb.lighting.setLightState({ on_off: true, brightness })
+        //     )
+        // );
+        await setBrightness(brightness);
         brightnessQueue.shift();
     }
     processingQueue = false;
