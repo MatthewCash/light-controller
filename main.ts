@@ -193,11 +193,11 @@ ws.on('connection', client => {
 });
 
 setInterval(() => {
-    ws.clients.forEach(Client => {
-        if (!Client.alive) return Client.terminate();
+    ws.clients.forEach(client => {
+        if (!client.alive) return client.terminate();
 
-        Client.alive = false;
-        Client.ping();
+        client.alive = false;
+        client.ping();
     });
 }, 10000);
 
