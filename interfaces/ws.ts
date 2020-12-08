@@ -50,7 +50,8 @@ const sendToClients = (data: string | any) => {
     if (typeof data === 'string') {
         ws.clients.forEach(client => client.send(data));
     } else {
-        ws.clients.forEach(client => client.send(JSON.stringify(data)));
+        const jsonString = JSON.stringify(data);
+        ws.clients.forEach(client => client.send(jsonString));
     }
 };
 
