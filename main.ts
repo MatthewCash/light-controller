@@ -1,5 +1,6 @@
 import TPLSmartDevice from 'tplink-lightbulb';
 import { setColor } from './commands/setColor';
+import { setCycle } from './commands/setCycle';
 import { startHttpServer } from './interfaces/http';
 import { sendStatus, startWebSocketServer } from './interfaces/ws';
 import { startSwitchMonitoring } from './switch';
@@ -11,17 +12,19 @@ startSwitchMonitoring();
 
 export const bulbProperties = {
     cycle: false,
-    cycleSpeed: 6000,
-    color: 0,
+    cycleSpeed: 12000,
+    color: 1,
     cycleTimer: null
 };
 
 bulbProperties.cycleTimer = setInterval(() => {
     if (!bulbProperties.cycle) return;
     bulbProperties.color += 60;
+    if (bulbProperties.color >= 360) bulbProperties.color = 1;
     setColor(bulbProperties.color, true);
-    if (bulbProperties.color >= 360) bulbProperties.color = 0;
 }, bulbProperties.cycleSpeed / 6);
+
+const validCycles = new Array(6).fill(null).map((x, i) => 60 * i + 1);
 
 export const bulbs = [];
 
@@ -66,12 +69,17 @@ export const status: BulbStatus = { lighting: null };
 export const updateStatus = async () => {
     if (!bulbs[0]) return;
     const data = await bulbs[0].info();
+
+    // Check for external update
+    if (bulbProperties.cycle && !validCycles.includes(data.light_state.hue)) {
+        setCycle(false);
+    }
+
     status.lighting = {
         ...data.light_state,
         cycle: data.light_state.on_off ? bulbProperties.cycle : false,
         speeed: bulbProperties.cycleSpeed
     };
-    // if (status.cycle) status.hue += 50;
     sendStatus();
 };
 
