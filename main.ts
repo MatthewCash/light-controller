@@ -1,10 +1,13 @@
 import TPLSmartDevice from 'tplink-lightbulb';
 import { setColor } from './commands/setColor';
 import { startHttpServer } from './interfaces/http';
-import { startWebSocketServer } from './interfaces/ws';
+import { sendStatus, startWebSocketServer } from './interfaces/ws';
+import { startSwitchMonitoring } from './switch';
 
 startHttpServer();
 startWebSocketServer();
+
+startSwitchMonitoring();
 
 export const bulbProperties = {
     cycle: false,
@@ -60,7 +63,7 @@ interface BulbStatus {
 
 export const status: BulbStatus = { lighting: null };
 
-setInterval(async () => {
+export const updateStatus = async () => {
     if (!bulbs[0]) return;
     const data = await bulbs[0].info();
     status.lighting = {
@@ -68,6 +71,8 @@ setInterval(async () => {
         cycle: data.light_state.on_off ? bulbProperties.cycle : false,
         speeed: bulbProperties.cycleSpeed
     };
-
     // if (status.cycle) status.hue += 50;
-}, 1000);
+    sendStatus();
+};
+
+setInterval(updateStatus, 100);

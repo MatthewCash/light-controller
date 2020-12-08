@@ -5,7 +5,7 @@ import { setCycle } from '../commands/setCycle';
 import { setPower } from '../commands/setPower';
 import { setSpeed } from '../commands/setSpeed';
 import { setWhite } from '../commands/setWhite';
-import { bulbs, status } from '../main';
+import { bulbs, status, updateStatus } from '../main';
 
 let ws: WebSocket.Server;
 
@@ -23,7 +23,7 @@ export const startWebSocketServer = () => {
     });
 };
 
-const onMessage = (message: string) => {
+const onMessage = async (message: string) => {
     let data;
     try {
         data = JSON.parse(message);
@@ -31,12 +31,19 @@ const onMessage = (message: string) => {
         return 'ERROR: Invalid JSON!';
     }
 
-    if (data?.color != null) setColor(data.color);
-    if (data?.white != null) setWhite(data.white);
-    if (data?.power != null) setPower(data.power);
-    if (data?.cycle != null) setCycle(data.cycle);
-    if (data?.brightness != null) setBrightness(data.brightness, data.adjust);
-    if (data?.speed != null) setSpeed(data.speed);
+    const actions: Promise<void>[] = [];
+
+    if (data?.color != null) actions.push(setColor(data.color));
+    if (data?.white != null) actions.push(setWhite(data.white));
+    if (data?.power != null) actions.push(setPower(data.power));
+    if (data?.cycle != null) actions.push(setCycle(data.cycle));
+    if (data?.brightness != null)
+        actions.push(setBrightness(data.brightness, data.adjust));
+    if (data?.speed != null) actions.push(setSpeed(data.speed));
+
+    await Promise.all(actions);
+
+    updateStatus();
 };
 
 const sendToClients = (data: string | any) => {
@@ -56,10 +63,10 @@ setInterval(() => {
     });
 }, 10000);
 
-setInterval(() => {
+export const sendStatus = () => {
     if (!bulbs[0] || !status.lighting) {
         return sendToClients('No Bulbs Detected!');
     }
 
     sendToClients(status.lighting);
-}, 1000);
+};
