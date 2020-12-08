@@ -1,4 +1,4 @@
-import { bulbProperties, bulbs } from '../main';
+import { bulbProperties, bulbs, status } from '../main';
 
 export const setColor = async (
     color: number,
@@ -14,7 +14,7 @@ export const setColor = async (
                 hue: color,
                 saturation: 100,
                 color_temp: 0,
-                on_off: true
+                on_off: keepCycle ? status.lighting.on_off : true
             })
         )
     );
