@@ -23,8 +23,18 @@ export const startWebSocketServer = () => {
     });
 };
 
+interface wsData {
+    color?: number;
+    white?: number | boolean;
+    power?: boolean;
+    cycle?: boolean;
+    brightness?: number;
+    adjust?: boolean;
+    speed?: number;
+}
+
 const onMessage = async (message: string) => {
-    let data;
+    let data: wsData;
     try {
         data = JSON.parse(message);
     } catch {
