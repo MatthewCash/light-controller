@@ -1,4 +1,4 @@
-import { bulbProperties, bulbs, status } from '../main';
+import { bulbProperties, bulbs, status, transitionPeriod } from '../main';
 
 export const setColor = async (
     color: number,
@@ -8,9 +8,7 @@ export const setColor = async (
     await Promise.all(
         bulbs.map(bulb =>
             bulb.setLighting({
-                transition_period: keepCycle
-                    ? bulbProperties.cycleSpeed / 6
-                    : 1000,
+                transition_period: keepCycle ? transitionPeriod() : 1000,
                 hue: color,
                 saturation: 100,
                 color_temp: 0,

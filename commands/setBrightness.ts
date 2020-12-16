@@ -1,4 +1,4 @@
-import { bulbProperties, bulbs } from '../main';
+import { bulbs } from '../main';
 
 export const setBrightness = async (
     brightness: number,
@@ -33,17 +33,12 @@ const processBrightnessQueue = async (): Promise<void> => {
 
         let {
             brightness: currentBrightness
-        } = await bulbs[0].lighting.getLightState();
-        let brightness = adjustment + currentBrightness;
+        } = await bulbs[0].getLightingState();
 
+        let brightness = adjustment + currentBrightness;
         if (brightness < 0) brightness = 0;
         if (brightness > 100) brightness = 100;
 
-        // await Promise.all(
-        //     bulbs.map(bulb =>
-        //         bulb.lighting.setLightState({ on_off: true, brightness })
-        //     )
-        // );
         await setBrightness(brightness);
         brightnessQueue.shift();
     }

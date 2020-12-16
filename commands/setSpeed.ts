@@ -11,7 +11,7 @@ export const setSpeed = async (speed: number): Promise<void> => {
         if (!bulbProperties.cycle) return;
         bulbProperties.color += 60;
         bulbs.forEach(bulb => {
-            bulb.lighting.setLightState({
+            bulb.setLighting({
                 transition_period:
                     bulbProperties.cycleSpeed / 6 -
                     bulbProperties.cycleSpeed / 60,
