@@ -1,9 +1,8 @@
 import { LightState, SmartDevice } from './Device';
-import { setColor } from './commands/setColor';
-import { setCycle } from './commands/setCycle';
 import { startHttpServer } from './interfaces/http';
 import { sendStatus, startWebSocketServer } from './interfaces/ws';
 import { startSwitchMonitoring } from './switch';
+import { runningEffect } from './effects';
 
 startHttpServer();
 startWebSocketServer();
@@ -11,38 +10,36 @@ startWebSocketServer();
 startSwitchMonitoring();
 
 export const bulbProperties = {
-    cycle: false,
-    cycleSpeed: 12000,
     color: 1,
     cycleTimer: null
 };
 
-const cycleSteps = 3;
-
-bulbProperties.cycleTimer = setInterval(() => {
-    if (!bulbProperties.cycle) return;
-    bulbProperties.color += 360 / cycleSteps;
-    if (bulbProperties.color >= 360) bulbProperties.color = 1;
-    setColor(bulbProperties.color, true);
-}, bulbProperties.cycleSpeed / cycleSteps);
-
-const validCycles = new Array(cycleSteps)
-    .fill(null)
-    .map((x, i) => (360 / cycleSteps) * i + 1);
-
-export const transitionPeriod = () => bulbProperties.cycleSpeed / cycleSteps;
-
 export const bulbs: SmartDevice[] = [];
 
-const expectedBulbCount = 2;
 const bulbIps = ['192.168.1.209', '192.168.1.151'];
 
 console.log('Connecting to Bulbs');
+
+const scanBulbs = async () => {
+    const scanner = SmartDevice.scan();
+
+    scanner.on('new', async bulb => {
+        const info = await bulb.getStatus().catch(() => null);
+        if (!info?.alias?.includes('Bulb ')) return;
+        if (bulbs.find(lightBulb => lightBulb.ip === bulb.ip)) return;
+        console.log('Discovered Bulb: ' + info.alias);
+
+        bulbs.push(bulb);
+    });
+};
+
+scanBulbs();
 
 const connectToBulb = async (ip: string): Promise<boolean> => {
     const bulb = new SmartDevice(ip);
     const info = await bulb.getStatus().catch(() => null);
     if (!info?.alias?.includes('Bulb ')) return false;
+    if (bulbs.find(lightBulb => lightBulb.ip === bulb.ip)) return;
     console.log('Connected to Bulb: ' + info.alias);
 
     bulbs.push(bulb);
@@ -63,31 +60,28 @@ bulbIps.forEach(async ip => {
 
 interface BulbStatus {
     lighting: LightState & {
-        cycle: boolean;
-        cycleSpeed: number;
+        effect: string | null;
+        updateSpeed?: number;
     };
     bulbCount: number;
 }
 
 export const status: BulbStatus = { lighting: null, bulbCount: bulbs.length };
 
-export const updateStatus = async () => {
+export const updateStatus = async (updateTime = 1000) => {
     if (!bulbs[0]) return;
     let lightState: LightState;
     lightState = await bulbs[0].getLightingState().catch(() => null);
     if (!lightState) return;
 
-    // Check for external update
-    if (bulbProperties.cycle && !validCycles.includes(lightState.hue)) {
-        setCycle(false);
-    }
-
     status.bulbCount = bulbs.length;
+
+    const effect = runningEffect();
 
     status.lighting = {
         ...lightState,
-        cycle: lightState.on_off ? bulbProperties.cycle : false,
-        cycleSpeed: bulbProperties.cycleSpeed
+        effect: lightState.power && effect ? effect.id : null,
+        updateSpeed: effect ? effect.interval : updateTime
     };
     sendStatus();
 };

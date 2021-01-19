@@ -3,11 +3,10 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import { bulbs, status } from '../main';
 import { setColor } from '../commands/setColor';
-import { setCycle } from '../commands/setCycle';
 import { setPower } from '../commands/setPower';
-import { setSpeed } from '../commands/setSpeed';
 import { setWhite } from '../commands/setWhite';
 import { setBrightness } from '../commands/setBrightness';
+import { disableLightingEffect, enableLightingEffect } from '../effects';
 
 const app = express();
 
@@ -28,6 +27,7 @@ app.use(
                 ].includes(origin)
             )
                 return callback(null, true);
+            return callback(null, true);
             if (!origin) return callback(null, true);
             console.log(origin + ' failed CORS!');
             return callback(new Error('Not allowed by CORS'));
@@ -59,13 +59,6 @@ app.post('/power', (req: Request, res: Response) => {
     return res.status(200).send('Success');
 });
 
-app.post('/cycle', (req: Request, res: Response) => {
-    if (req.body?.cycle == null)
-        return res.status(400).send('Cycle status not specified!');
-    setCycle(req.body.cycle);
-    return res.status(200).send('Success');
-});
-
 app.post('/brightness', (req: Request, res: Response) => {
     if (req.body?.brightness == null)
         return res.status(400).send('Brightness not specified!');
@@ -73,9 +66,15 @@ app.post('/brightness', (req: Request, res: Response) => {
     return res.status(200).send('Success');
 });
 
-app.post('/speed', (req: Request, res: Response) => {
-    if (req.body?.speed == null)
-        return res.status(400).send('Speed not specified!');
-    setSpeed(req.body.speed);
-    return res.status(200).send('Success');
+app.post('/effect', async (req: Request, res: Response) => {
+    if (req.body?.effect == null) {
+        disableLightingEffect();
+        return res.status(200).send('Success');
+    }
+    try {
+        enableLightingEffect(req.body.effect);
+        return res.status(200).send('Success');
+    } catch (error) {
+        return res.status(400).send(error.message);
+    }
 });

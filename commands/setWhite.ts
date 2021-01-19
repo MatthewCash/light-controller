@@ -1,12 +1,15 @@
-import { bulbProperties, bulbs } from '../main';
+import { disableLightingEffect } from '../effects';
+import { bulbs } from '../main';
 
 export const setWhite = async (cold?: boolean | number): Promise<void> => {
-    bulbProperties.cycle = false;
+    disableLightingEffect();
     if (cold === true) cold = 9000;
     if (cold === false) cold = 2500;
 
     if (cold < 2500) cold = 2500;
     if (cold > 9000) cold = 9000;
+
+    if (!cold) cold = 4500;
 
     await Promise.all(
         bulbs.map(bulb =>

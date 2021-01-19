@@ -1,10 +1,15 @@
 import WebSocket from 'ws';
 import { setBrightness } from '../commands/setBrightness';
 import { setColor } from '../commands/setColor';
-import { setCycle } from '../commands/setCycle';
 import { setPower } from '../commands/setPower';
-import { setSpeed } from '../commands/setSpeed';
 import { setWhite } from '../commands/setWhite';
+import {
+    disableLightingEffect,
+    enableLightingEffect,
+    getLoadedEffects,
+    loadLightingEffects,
+    sendLoadedEffects
+} from '../effects';
 import { bulbs, status, updateStatus } from '../main';
 
 let ws: WebSocket.Server;
@@ -17,20 +22,24 @@ export const startWebSocketServer = () => {
     ws = new WebSocket.Server({ port: 1728 });
 
     ws.on('connection', (client: WebSocketClient) => {
+        client.send(JSON.stringify({ effects: getLoadedEffects() }));
+
         client.alive = true;
         client.on('message', onMessage);
         client.on('pong', () => (client.alive = true));
     });
+
+    sendLoadedEffects();
 };
 
 interface wsData {
-    color?: number;
-    white?: number | boolean;
-    power?: boolean;
-    cycle?: boolean;
-    brightness?: number;
+    setColor?: number;
+    setWhite?: number | boolean;
+    setPower?: boolean;
+    setEffect?: string;
+    setBrightness?: number;
     adjust?: boolean;
-    speed?: number;
+    reloadLightingEffects?: number;
 }
 
 const onMessage = async (message: string) => {
@@ -43,20 +52,24 @@ const onMessage = async (message: string) => {
 
     const actions: Promise<void>[] = [];
 
-    if (data?.color != null) actions.push(setColor(data.color));
-    if (data?.white != null) actions.push(setWhite(data.white));
-    if (data?.power != null) actions.push(setPower(data.power));
-    if (data?.cycle != null) actions.push(setCycle(data.cycle));
-    if (data?.brightness != null)
-        actions.push(setBrightness(data.brightness, data.adjust));
-    if (data?.speed != null) actions.push(setSpeed(data.speed));
+    if (data?.setColor != null) actions.push(setColor(data.setColor));
+    if (data?.setWhite != null) actions.push(setWhite(data.setWhite));
+    if (data?.setPower != null) actions.push(setPower(data.setPower));
+    if (data?.setEffect != null) enableLightingEffect(data.setEffect);
+    if (data?.setEffect === null) disableLightingEffect();
+    if (data?.setBrightness != null)
+        actions.push(setBrightness(data.setBrightness, data.adjust));
+
+    if (data.reloadLightingEffects) {
+        loadLightingEffects();
+    }
 
     await Promise.all(actions);
 
     updateStatus();
 };
 
-const sendToClients = (data: string | any) => {
+export const sendToClients = (data: string | any) => {
     if (typeof data === 'string') {
         ws.clients.forEach(client => client.send(data));
     } else {
@@ -79,5 +92,5 @@ export const sendStatus = () => {
         return sendToClients('No Bulbs Detected!');
     }
 
-    sendToClients(status.lighting);
+    sendToClients({ status: status.lighting });
 };

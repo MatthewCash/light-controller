@@ -80,7 +80,7 @@ export class SwitchController {
             const data = await smartSwitch.getStatus().catch(() => null);
 
             if (data?.relay_state !== 0) return;
-            smartSwitch.setRelayPower(true);
+            smartSwitch.setRelayPower(true).catch(() => null);
             this.toggleLights();
         });
     }

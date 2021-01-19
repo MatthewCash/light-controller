@@ -2,12 +2,11 @@ import dgram from 'dgram';
 import { EventEmitter } from 'events';
 
 export interface LightState {
-    on_off: 0 | 1;
-    mode: 'normal' | string;
-    hue: number;
-    saturation: number;
-    color_temp: number;
+    hue?: number;
+    saturation?: number;
     brightness: number;
+    colorTemp?: number;
+    power: boolean;
 }
 
 export class SmartDevice extends EventEmitter {
@@ -15,6 +14,35 @@ export class SmartDevice extends EventEmitter {
     constructor(ip: string) {
         super();
         this.ip = ip;
+    }
+    public static scan(broadcastAddr = '255.255.255.255') {
+        const emitter = new EventEmitter();
+        const client = dgram.createSocket({
+            type: 'udp4',
+            reuseAddr: true
+        });
+        client.bind(9998, undefined, () => {
+            client.setBroadcast(true);
+            const message = SmartDevice.encrypt(
+                '{"system":{"get_sysinfo":{}}}'
+            );
+            client.send(message, 0, message.length, 9999, broadcastAddr);
+        });
+        client.on('message', (msg, rinfo) => {
+            const device = new SmartDevice(rinfo.address);
+
+            emitter.emit('new', device);
+        });
+        return emitter;
+    }
+    public static convertToLightState(data: any): LightState {
+        return {
+            hue: data.hue,
+            saturation: data.saturation,
+            brightness: data.brightness,
+            colorTemp: data.color_temp,
+            power: data.on_off
+        };
     }
     public static encrypt(buffer: Buffer | string, key = 0xab) {
         if (!Buffer.isBuffer(buffer)) buffer = Buffer.from(buffer);
@@ -42,7 +70,7 @@ export class SmartDevice extends EventEmitter {
         const message = SmartDevice.encrypt(JSON.stringify(data));
 
         const decodedData = await new Promise((resolve, reject) => {
-            setTimeout(() => {
+            setTimeout(async () => {
                 try {
                     client.close();
                     reject(new Error('Request Timed Out!'));
@@ -80,13 +108,46 @@ export class SmartDevice extends EventEmitter {
     }
     public async getLightingState(): Promise<LightState> {
         const data = await this.getStatus();
-        return data?.light_state;
+        return SmartDevice.convertToLightState(data?.light_state);
     }
     public async setLighting(lightingData) {
         return this.sendData({
             'smartlife.iot.smartbulb.lightingservice': {
                 transition_light_state: lightingData
             }
+        });
+    }
+    public async setColor(
+        hue: number,
+        saturation = 100,
+        brightness = 100,
+        transitionSpeed = 100,
+
+        setPower = true
+    ) {
+        const lightingData = {
+            on_off: true,
+            ignore_default: 1,
+            hue,
+            saturation,
+            brightness,
+            color_temp: 0,
+            transition_period: transitionSpeed
+        };
+        if (!setPower) delete lightingData.on_off;
+
+        return this.setLighting(lightingData);
+    }
+    public async setWhite(
+        temperature = 9000,
+        setPower = true,
+        transitionSpeed = 100
+    ) {
+        return this.setLighting({
+            ignore_default: 1,
+            on_off: setPower,
+            color_temp: temperature,
+            transition_period: transitionSpeed
         });
     }
     public async setLightingPower(powerState: boolean, transitionSpeed = 1000) {
