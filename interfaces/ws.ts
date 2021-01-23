@@ -7,8 +7,7 @@ import {
     disableLightingEffect,
     enableLightingEffect,
     getLoadedEffects,
-    loadLightingEffects,
-    sendLoadedEffects
+    loadLightingEffects
 } from '../effects';
 import { bulbs, status, updateStatus } from '../main';
 
@@ -28,8 +27,6 @@ export const startWebSocketServer = () => {
         client.on('message', onMessage);
         client.on('pong', () => (client.alive = true));
     });
-
-    sendLoadedEffects();
 };
 
 interface wsData {
