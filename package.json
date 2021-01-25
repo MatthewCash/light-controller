@@ -11,6 +11,7 @@
     "author": "Matthew_Cash",
     "license": "ISC",
     "dependencies": {
+        "@types/cors": "^2.8.9",
         "@types/express": "^4.17.9",
         "@types/ws": "^7.4.0",
         "body-parser": "^1.19.0",
