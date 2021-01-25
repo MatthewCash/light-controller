@@ -15,25 +15,7 @@ export const startHttpServer = () => {
 };
 
 app.use(bodyParser.json());
-app.use(
-    cors({
-        origin: (origin, callback) => {
-            if (
-                [
-                    'http://localhost:8080',
-                    'http://192.168.1.203:8080',
-                    'http://127.0.0.1',
-                    'https://matthewcash.github.io'
-                ].includes(origin)
-            )
-                return callback(null, true);
-            return callback(null, true);
-            if (!origin) return callback(null, true);
-            console.log(origin + ' failed CORS!');
-            return callback(new Error('Not allowed by CORS'));
-        }
-    })
-);
+app.use(cors());
 
 app.get('/status', (req: Request, res: Response) => {
     if (!bulbs[0]) return res.status(425).send('Bulbs Initializing...');
