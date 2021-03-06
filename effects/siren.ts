@@ -16,7 +16,8 @@ export const effect: LightingEffect = {
                         100,
                         100,
                         evenRed ? 400 : 0,
-                        false
+                        false,
+                        0
                     )
                     .catch(() => null)
             );
@@ -29,7 +30,8 @@ export const effect: LightingEffect = {
                         100,
                         100,
                         !evenRed ? 400 : 0,
-                        false
+                        false,
+                        0
                     )
                     .catch(() => null)
             );

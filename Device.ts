@@ -78,7 +78,7 @@ export class SmartDevice extends EventEmitter {
                     if (error?.message === 'Not running') return;
                     console.error(error);
                 }
-            }, 3000);
+            }, 100);
 
             client.send(message, 0, message.length, 9999, this.ip, error => {
                 if (error) {
@@ -110,20 +110,27 @@ export class SmartDevice extends EventEmitter {
         const data = await this.getStatus();
         return SmartDevice.convertToLightState(data?.light_state);
     }
-    public async setLighting(lightingData) {
-        return this.sendData({
-            'smartlife.iot.smartbulb.lightingservice': {
-                transition_light_state: lightingData
-            }
-        });
+    public async setLighting(lightingData, retry = 4) {
+        let data;
+        do {
+            data = await this.sendData({
+                'smartlife.iot.smartbulb.lightingservice': {
+                    transition_light_state: lightingData
+                }
+            }).catch(() => null);
+            if (data) break;
+            retry--;
+        } while (retry > 0);
+
+        return data;
     }
     public async setColor(
         hue: number,
         saturation = 100,
         brightness = 100,
         transitionSpeed = 100,
-
-        setPower = true
+        setPower = true,
+        retry = 4
     ) {
         const lightingData = {
             on_off: true,
@@ -136,19 +143,23 @@ export class SmartDevice extends EventEmitter {
         };
         if (!setPower) delete lightingData.on_off;
 
-        return this.setLighting(lightingData);
+        return this.setLighting(lightingData, retry);
     }
     public async setWhite(
         temperature = 9000,
         setPower = true,
-        transitionSpeed = 100
+        transitionSpeed = 100,
+        retry = 4
     ) {
-        return this.setLighting({
-            ignore_default: 1,
-            on_off: setPower,
-            color_temp: temperature,
-            transition_period: transitionSpeed
-        });
+        return this.setLighting(
+            {
+                ignore_default: 1,
+                on_off: setPower,
+                color_temp: temperature,
+                transition_period: transitionSpeed
+            },
+            retry
+        );
     }
     public async setLightingPower(powerState: boolean, transitionSpeed = 1000) {
         return this.sendData({

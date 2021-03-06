@@ -8,7 +8,9 @@ export const effect: LightingEffect = {
     name: 'Cycle',
     async run(bulbs) {
         bulbs.forEach(bulb =>
-            bulb.setColor(currentColor, 100, 100, 500, false).catch(() => null)
+            bulb
+                .setColor(currentColor, 100, 100, 500, false, 0)
+                .catch(() => null)
         );
         currentColor += 30;
         if (currentColor >= 360) currentColor = 0;
