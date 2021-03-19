@@ -127,7 +127,7 @@ export class SmartDevice extends EventEmitter {
     public async setColor(
         hue: number,
         saturation = 100,
-        brightness = 100,
+        brightness?: number,
         transitionSpeed = 100,
         setPower = true,
         retry = 4
@@ -137,9 +137,9 @@ export class SmartDevice extends EventEmitter {
             ignore_default: 1,
             hue,
             saturation,
-            brightness,
             color_temp: 0,
-            transition_period: transitionSpeed
+            transition_period: transitionSpeed,
+            ...(brightness !== null ? { brightness } : null)
         };
         if (!setPower) delete lightingData.on_off;
 

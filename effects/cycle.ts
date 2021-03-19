@@ -9,7 +9,7 @@ export const effect: LightingEffect = {
     async run(bulbs) {
         bulbs.forEach(bulb =>
             bulb
-                .setColor(currentColor, 100, 100, 500, false, 0)
+                .setColor(currentColor, 100, null, 500, false, 0)
                 .catch(() => null)
         );
         currentColor += 30;

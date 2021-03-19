@@ -14,7 +14,7 @@ export const effect: LightingEffect = {
                     .setColor(
                         evenRed ? 0 : 240,
                         100,
-                        100,
+                        null,
                         evenRed ? 400 : 0,
                         false,
                         0
@@ -28,7 +28,7 @@ export const effect: LightingEffect = {
                     .setColor(
                         !evenRed ? 0 : 240,
                         100,
-                        100,
+                        null,
                         !evenRed ? 400 : 0,
                         false,
                         0
