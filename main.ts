@@ -7,8 +7,6 @@ import { runningEffect } from './effects';
 startHttpServer();
 startWebSocketServer();
 
-startSwitchMonitoring();
-
 export const bulbProperties = {
     color: 1,
     cycleTimer: null
@@ -27,7 +25,7 @@ const scanBulbs = async () => {
         const info = await bulb.getStatus().catch(() => null);
         if (!info?.alias?.includes('Bulb ')) return;
         if (bulbs.find(lightBulb => lightBulb.ip === bulb.ip)) return;
-        console.log('Discovered Bulb: ' + info.alias);
+        console.log(`Discovered Bulb: ${info.alias} (${bulb.ip})`);
 
         bulbs.push(bulb);
     });
@@ -38,6 +36,7 @@ scanBulbs();
 const connectToBulb = async (ip: string): Promise<boolean> => {
     const bulb = new SmartDevice(ip);
     const info = await bulb.getStatus().catch(() => null);
+
     if (!info?.alias?.includes('Bulb ')) return false;
     if (bulbs.find(lightBulb => lightBulb.ip === bulb.ip)) return;
     console.log('Connected to Bulb: ' + info.alias);
@@ -46,22 +45,27 @@ const connectToBulb = async (ip: string): Promise<boolean> => {
     return true;
 };
 
-bulbIps.forEach(async ip => {
-    let success = false;
-    while (!success) {
-        console.log('Connecting to Bulb ' + ip);
-        success = await connectToBulb(ip);
-        if (success) return;
+setTimeout(() => {
+    bulbIps.forEach(async ip => {
+        let success = false;
+        while (!success) {
+            if (bulbs.find(bulb => bulb.ip === ip)) return;
+            console.log('Connecting to Bulb ' + ip);
+            success = await connectToBulb(ip);
+            if (success) return;
 
-        console.warn('Unable to connect to ' + ip + ' Retrying in 1s');
-        await new Promise(r => setTimeout(r, 1000));
-    }
-});
+            console.warn('Unable to connect to ' + ip + ' Retrying in 1s');
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    });
+    startSwitchMonitoring();
+}, 10);
 
 interface BulbStatus {
     lighting: LightState & {
         effect: string | null;
         updateSpeed?: number;
+        mode: 'color' | 'white' | 'effect';
     };
     bulbCount: number;
 }
@@ -78,10 +82,17 @@ export const updateStatus = async (updateTime = 1000) => {
 
     const effect = runningEffect();
 
+    const mode = effect
+        ? 'effect'
+        : lightState.colorTemp === 0
+        ? 'color'
+        : 'white';
+
     status.lighting = {
         ...lightState,
         effect: lightState.power && effect ? effect.id : null,
-        updateSpeed: effect ? effect.interval : updateTime
+        updateSpeed: effect ? effect.interval : updateTime,
+        mode
     };
     sendStatus();
 };
