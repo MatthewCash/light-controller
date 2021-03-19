@@ -39,7 +39,7 @@ const connectToBulb = async (ip: string): Promise<boolean> => {
 
     if (!info?.alias?.includes('Bulb ')) return false;
     if (bulbs.find(lightBulb => lightBulb.ip === bulb.ip)) return;
-    console.log('Connected to Bulb: ' + info.alias);
+    console.log(`Connected to Bulb: ${info.alias} (${bulb.ip})`);
 
     bulbs.push(bulb);
     return true;
@@ -50,11 +50,11 @@ setTimeout(() => {
         let success = false;
         while (!success) {
             if (bulbs.find(bulb => bulb.ip === ip)) return;
-            console.log('Connecting to Bulb ' + ip);
+            console.log('Connecting to Bulb: ' + ip);
             success = await connectToBulb(ip);
             if (success) return;
 
-            console.warn('Unable to connect to ' + ip + ' Retrying in 1s');
+            console.warn(`Unable to connect to Bulb: ${ip} Retrying in 1s`);
             await new Promise(r => setTimeout(r, 1000));
         }
     });
