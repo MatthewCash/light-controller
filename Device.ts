@@ -130,7 +130,7 @@ export class SmartDevice extends EventEmitter {
         brightness?: number,
         transitionSpeed = 100,
         setPower = true,
-        retry = 4
+        retry?: number
     ) {
         const lightingData = {
             on_off: true,
@@ -139,9 +139,25 @@ export class SmartDevice extends EventEmitter {
             saturation,
             color_temp: 0,
             transition_period: transitionSpeed,
-            ...(brightness !== null ? { brightness } : null)
+            ...(brightness !== null ? { brightness } : null),
+            ...(setPower ? { on_off: true } : null)
         };
-        if (!setPower) delete lightingData.on_off;
+
+        return this.setLighting(lightingData, retry);
+    }
+    public async setBrightness(
+        brightness?: number,
+        transitionSpeed = 100,
+        setPower = false,
+        retry?: number
+    ) {
+        const lightingData = {
+            on_off: true,
+            ignore_default: 1,
+            transition_period: transitionSpeed,
+            brightness,
+            ...(setPower ? { on_off: true } : null)
+        };
 
         return this.setLighting(lightingData, retry);
     }
@@ -149,7 +165,7 @@ export class SmartDevice extends EventEmitter {
         temperature = 9000,
         setPower = true,
         transitionSpeed = 100,
-        retry = 4
+        retry?: number
     ) {
         return this.setLighting(
             {
