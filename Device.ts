@@ -133,7 +133,6 @@ export class SmartDevice extends EventEmitter {
         retry?: number
     ) {
         const lightingData = {
-            on_off: true,
             ignore_default: 1,
             hue,
             saturation,
@@ -152,7 +151,6 @@ export class SmartDevice extends EventEmitter {
         retry?: number
     ) {
         const lightingData = {
-            on_off: true,
             ignore_default: 1,
             transition_period: transitionSpeed,
             brightness,
@@ -170,9 +168,9 @@ export class SmartDevice extends EventEmitter {
         return this.setLighting(
             {
                 ignore_default: 1,
-                on_off: setPower,
                 color_temp: temperature,
-                transition_period: transitionSpeed
+                transition_period: transitionSpeed,
+                ...(setPower ? { on_off: true } : null)
             },
             retry
         );
