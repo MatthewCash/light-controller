@@ -12,7 +12,7 @@ export const setColor = async (
 
     await Promise.all(
         bulbs.map(bulb =>
-            bulb.setColor(color, 100, null, transitionSpeed, false)
+            bulb.setColor(color, 100, null, transitionSpeed, true)
         )
     );
 };
