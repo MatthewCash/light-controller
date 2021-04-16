@@ -138,8 +138,8 @@ export class SmartDevice extends EventEmitter {
             saturation,
             color_temp: 0,
             transition_period: transitionSpeed,
-            ...(brightness !== null ? { brightness } : null),
-            ...(setPower ? { on_off: true } : null)
+            ...(brightness !== null && { brightness }),
+            ...(setPower && { on_off: true })
         };
 
         return this.setLighting(lightingData, retry);
@@ -154,7 +154,7 @@ export class SmartDevice extends EventEmitter {
             ignore_default: 1,
             transition_period: transitionSpeed,
             brightness,
-            ...(setPower ? { on_off: true } : null)
+            ...(setPower && { on_off: true })
         };
 
         return this.setLighting(lightingData, retry);
@@ -170,7 +170,7 @@ export class SmartDevice extends EventEmitter {
                 ignore_default: 1,
                 color_temp: temperature,
                 transition_period: transitionSpeed,
-                ...(setPower ? { on_off: true } : null)
+                ...(setPower && { on_off: true })
             },
             retry
         );
