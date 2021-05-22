@@ -4,13 +4,14 @@ import { bulbs } from '../main';
 export const setWhite = async (cold?: boolean | number): Promise<void> => {
     disableLightingEffect();
 
-    if (cold === true) cold = 9000;
-    if (cold === false) cold = 2500;
+    let temperature = 4500;
 
-    if (cold < 2500) cold = 2500;
-    if (cold > 9000) cold = 9000;
+    if (cold === true) temperature = 9000;
+    if (cold === false) temperature = 2500;
 
-    if (!cold) cold = 4500;
+    if (typeof cold === 'number') {
+        temperature = Math.max(Math.min(cold, 9000), 2500);
+    }
 
-    await Promise.all(bulbs.map(bulb => bulb.setWhite(cold as number, true)));
+    await Promise.all(bulbs.map(bulb => bulb.setWhite(temperature, true)));
 };
