@@ -89,6 +89,8 @@ export class SwitchController {
             await this.bulbs[0].getLightingState().catch(() => null)
         )?.power;
 
-        this.bulbs.forEach(bulb => bulb.setLightingPower(!currentPower));
+        this.bulbs.forEach(bulb =>
+            bulb.setLightingPower(!currentPower, 1000, 10)
+        );
     }
 }
