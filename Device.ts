@@ -175,16 +175,27 @@ export class SmartDevice extends EventEmitter {
             retry
         );
     }
-    public async setLightingPower(powerState: boolean, transitionSpeed = 1000) {
-        return this.sendData({
-            'smartlife.iot.smartbulb.lightingservice': {
-                transition_light_state: {
-                    ignore_default: 1,
-                    on_off: powerState ? 1 : 0,
-                    transition_period: transitionSpeed
+    public async setLightingPower(
+        powerState: boolean,
+        transitionSpeed = 1000,
+        retry = 4
+    ) {
+        let data;
+        do {
+            data = await this.sendData({
+                'smartlife.iot.smartbulb.lightingservice': {
+                    transition_light_state: {
+                        ignore_default: 1,
+                        on_off: powerState ? 1 : 0,
+                        transition_period: transitionSpeed
+                    }
                 }
-            }
-        });
+            }).catch(() => null);
+            if (data) break;
+            retry--;
+        } while (retry > 0);
+
+        return data;
     }
     public async setRelayPower(powerState: boolean) {
         return this.sendData({
