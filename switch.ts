@@ -7,8 +7,13 @@ interface SwitchSetup {
 
 const switchSetups: SwitchSetup[] = [
     {
-        switchIps: '192.168.1.183',
-        bulbIps: ['192.168.1.209', '192.168.1.151']
+        switchIps: '192.168.1.182',
+        bulbIps: [
+            '192.168.1.209',
+            '192.168.1.151',
+            '192.168.1.42',
+            '192.168.1.130'
+        ]
     }
 ];
 

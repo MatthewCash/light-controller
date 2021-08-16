@@ -14,7 +14,12 @@ export const bulbProperties = {
 
 export const bulbs: SmartDevice[] = [];
 
-const bulbIps = ['192.168.1.209', '192.168.1.151'];
+const bulbIps = [
+    '192.168.1.209',
+    '192.168.1.151',
+    '192.168.1.42',
+    '192.168.1.130'
+];
 
 console.log('Connecting to Bulbs');
 
