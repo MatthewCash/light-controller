@@ -16,7 +16,19 @@ export const startSwitchMonitoring = async () => {
                     switchSetup.switchIps,
                     switchSetup.bulbIps
                 );
-                await switchController.connect();
+
+                let success = false;
+
+                while (!success) {
+                    try {
+                        await switchController.connect();
+                        success = true;
+                    } catch {
+                        success = false;
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+
                 switchController.startPolling();
                 resolve();
             })
