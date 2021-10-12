@@ -3,6 +3,7 @@ import { startHttpServer } from './interfaces/http';
 import { sendStatus, startWebSocketServer } from './interfaces/ws';
 import { startSwitchMonitoring } from './switch';
 import { runningEffect } from './effects';
+import config from './config.json';
 
 startHttpServer();
 startWebSocketServer();
@@ -14,12 +15,7 @@ export const bulbProperties = {
 
 export const bulbs: SmartDevice[] = [];
 
-const bulbIps = [
-    '192.168.1.209',
-    '192.168.1.151',
-    '192.168.1.42',
-    '192.168.1.130'
-];
+const bulbIps: string[] = config.mainBulbIps;
 
 console.log('Connecting to Bulbs');
 

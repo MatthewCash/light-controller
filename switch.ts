@@ -1,21 +1,12 @@
 import { SwitchController } from './SwitchController';
+import config from './config.json';
 
 interface SwitchSetup {
     switchIps: string | string[];
     bulbIps: string | string[];
 }
 
-const switchSetups: SwitchSetup[] = [
-    {
-        switchIps: '192.168.1.182',
-        bulbIps: [
-            '192.168.1.209',
-            '192.168.1.151',
-            '192.168.1.42',
-            '192.168.1.130'
-        ]
-    }
-];
+const switchSetups: SwitchSetup[] = config.switchSetups;
 
 export const startSwitchMonitoring = async () => {
     const switchSetupPromises = switchSetups.map(
