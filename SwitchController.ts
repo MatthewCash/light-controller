@@ -47,25 +47,33 @@ export class SwitchController {
 
         const bulbPromises = this.bulbIps.map(
             ip =>
-                new Promise<SmartDevice>(async resolve => {
+                new Promise<SmartDevice>(async (resolve, reject) => {
                     const smartBulb = new SmartDevice(ip);
                     const status = await smartBulb
                         .getStatus()
                         .catch(() => null);
-                    if (!status)
-                        throw new Error('Could not connect to bulb ' + ip);
-                    resolve(smartBulb);
+                    if (!status) {
+                        reject(new Error('Could not connect to bulb ' + ip));
+                    } else {
+                        resolve(smartBulb);
+                    }
                 })
         );
 
         await Promise.all([
-            new Promise<void>(async resolve => {
-                const smartSwitches = await Promise.all(switchPromises);
+            new Promise<void>(async (resolve, reject) => {
+                const smartSwitches = await Promise.all(switchPromises).catch(
+                    reject
+                );
+                if (!smartSwitches) return;
                 this.switches.push(...smartSwitches);
                 resolve();
             }),
-            new Promise<void>(async resolve => {
-                const smartBulbs = await Promise.all(bulbPromises);
+            new Promise<void>(async (resolve, reject) => {
+                const smartBulbs = await Promise.all(bulbPromises).catch(
+                    reject
+                );
+                if (!smartBulbs) return;
                 this.bulbs.push(...smartBulbs);
                 resolve();
             })
