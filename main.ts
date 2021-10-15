@@ -60,7 +60,7 @@ setTimeout(() => {
         }
     });
     startSwitchMonitoring();
-}, 10);
+}, 1000);
 
 interface BulbStatus {
     lighting: LightState & {
