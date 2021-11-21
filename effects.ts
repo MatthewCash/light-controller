@@ -1,4 +1,4 @@
-import { SmartDevice } from './Device';
+import { TpLinkDevice } from './TpLinkDevice';
 import { readDirRecursive } from './util/readDirRecursive';
 import path from 'path';
 import { bulbs } from './main';
@@ -8,7 +8,7 @@ export interface LightingEffect {
     interval: number;
     id: string;
     name: string;
-    run: (lights: SmartDevice[]) => void | Promise<void>;
+    run: (lights: TpLinkDevice[]) => void | Promise<void>;
 }
 
 const effectsDir = './effects/';

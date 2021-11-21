@@ -9,7 +9,7 @@ export interface LightState {
     power: boolean;
 }
 
-export class SmartDevice extends EventEmitter {
+export class TpLinkDevice extends EventEmitter {
     readonly ip: string;
     constructor(ip: string) {
         super();
@@ -23,13 +23,13 @@ export class SmartDevice extends EventEmitter {
         });
         client.bind(9998, undefined, () => {
             client.setBroadcast(true);
-            const message = SmartDevice.encrypt(
+            const message = TpLinkDevice.encrypt(
                 '{"system":{"get_sysinfo":{}}}'
             );
             client.send(message, 0, message.length, 9999, broadcastAddr);
         });
         client.on('message', (msg, rinfo) => {
-            const device = new SmartDevice(rinfo.address);
+            const device = new TpLinkDevice(rinfo.address);
 
             emitter.emit('new', device);
         });
@@ -67,7 +67,7 @@ export class SmartDevice extends EventEmitter {
             reuseAddr: true
         });
 
-        const message = SmartDevice.encrypt(JSON.stringify(data));
+        const message = TpLinkDevice.encrypt(JSON.stringify(data));
 
         const decodedData = await new Promise((resolve, reject) => {
             setTimeout(async () => {
@@ -90,7 +90,7 @@ export class SmartDevice extends EventEmitter {
                     let decodedData;
                     try {
                         decodedData = JSON.parse(
-                            SmartDevice.decrypt(message).toString()
+                            TpLinkDevice.decrypt(message).toString()
                         );
                     } catch {
                         return reject(new Error('Could not parse payload!'));
@@ -108,7 +108,7 @@ export class SmartDevice extends EventEmitter {
     }
     public async getLightingState(): Promise<LightState> {
         const data = await this.getStatus();
-        return SmartDevice.convertToLightState(data?.light_state);
+        return TpLinkDevice.convertToLightState(data?.light_state);
     }
     public async setLighting(lightingData, retry = 4) {
         let data;

@@ -1,4 +1,4 @@
-import { SmartDevice } from './Device';
+import { TpLinkDevice } from './TpLinkDevice';
 
 const throttle = (callback: () => void, limit: number): (() => void) => {
     let waiting = false; // Initially, we're not waiting
@@ -19,8 +19,8 @@ const throttle = (callback: () => void, limit: number): (() => void) => {
 export class SwitchController {
     switchIps: string[];
     bulbIps: string[];
-    switches: SmartDevice[];
-    bulbs: SmartDevice[];
+    switches: TpLinkDevice[];
+    bulbs: TpLinkDevice[];
     toggleLights: () => void;
     pollInterval?: NodeJS.Timeout;
     constructor(switchIps: string | string[], bulbIps: string | string[]) {
@@ -34,8 +34,8 @@ export class SwitchController {
     async connect() {
         const switchPromises = this.switchIps.map(
             ip =>
-                new Promise<SmartDevice>(async resolve => {
-                    const smartSwitch = new SmartDevice(ip);
+                new Promise<TpLinkDevice>(async resolve => {
+                    const smartSwitch = new TpLinkDevice(ip);
                     const status = await smartSwitch
                         .getStatus()
                         .catch(() => null);
@@ -47,8 +47,8 @@ export class SwitchController {
 
         const bulbPromises = this.bulbIps.map(
             ip =>
-                new Promise<SmartDevice>(async (resolve, reject) => {
-                    const smartBulb = new SmartDevice(ip);
+                new Promise<TpLinkDevice>(async (resolve, reject) => {
+                    const smartBulb = new TpLinkDevice(ip);
                     const status = await smartBulb
                         .getStatus()
                         .catch(() => null);

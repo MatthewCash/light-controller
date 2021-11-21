@@ -1,4 +1,4 @@
-import { LightState, SmartDevice } from './Device';
+import { LightState, TpLinkDevice } from './TpLinkDevice';
 import { startHttpServer } from './interfaces/http';
 import { sendStatus, startWebSocketServer } from './interfaces/ws';
 import { startSwitchMonitoring } from './switch';
@@ -13,14 +13,14 @@ export const bulbProperties = {
     cycleTimer: null
 };
 
-export const bulbs: SmartDevice[] = [];
+export const bulbs: TpLinkDevice[] = [];
 
 const bulbIps: string[] = config.mainBulbIps;
 
 console.log('Connecting to Bulbs');
 
 const scanBulbs = async () => {
-    const scanner = SmartDevice.scan();
+    const scanner = TpLinkDevice.scan();
 
     scanner.on('new', async bulb => {
         const info = await bulb.getStatus().catch(() => null);
@@ -35,7 +35,7 @@ const scanBulbs = async () => {
 scanBulbs();
 
 const connectToBulb = async (ip: string): Promise<boolean> => {
-    const bulb = new SmartDevice(ip);
+    const bulb = new TpLinkDevice(ip);
     const info = await bulb.getStatus().catch(() => null);
 
     if (!info?.alias?.includes('Bulb ')) return false;
