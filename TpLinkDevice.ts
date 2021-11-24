@@ -41,7 +41,7 @@ export class TpLinkDevice extends EventEmitter {
             saturation: data.saturation,
             brightness: data.brightness,
             colorTemp: data.color_temp,
-            power: data.on_off
+            power: Boolean(data.on_off)
         };
     }
     public static encrypt(buffer: Buffer | string, key = 0xab) {
