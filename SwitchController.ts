@@ -94,7 +94,7 @@ export class SwitchController {
     }
     async togglePower() {
         const currentPower = !!(
-            await this.bulbs[0].getLightingState().catch(() => null)
+            await this.bulbs[0]?.getLightingState().catch(() => null)
         )?.power;
 
         this.bulbs.forEach(bulb =>
