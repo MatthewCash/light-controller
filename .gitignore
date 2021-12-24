@@ -8,6 +8,9 @@ yarn-error.log*
 # Config
 config.json
 
+# Effects
+effects/
+
 # Runtime data
 pids
 *.pid
