@@ -55,8 +55,8 @@ setTimeout(() => {
             success = await connectToBulb(ip);
             if (success) return;
 
-            console.warn(`Unable to connect to Bulb: ${ip} Retrying in 1s`);
-            await new Promise(r => setTimeout(r, 1000));
+            console.warn(`Unable to connect to Bulb: ${ip} Retrying in 5s`);
+            await new Promise(r => setTimeout(r, 5000));
         }
     });
     startSwitchMonitoring();
