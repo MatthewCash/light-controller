@@ -91,6 +91,12 @@ export const updateStatus = async (updateTime = 1000) => {
     sendStatus();
 };
 
+// Reload Signal
+process.on('SIGUSR2', () => {
+    console.log('Reloading lighting effects...');
+    loadLightingEffects();
+});
+
 const main = async () => {
     startHttpServer();
     startWebSocketServer();
