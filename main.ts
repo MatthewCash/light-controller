@@ -2,11 +2,8 @@ import { LightState, TpLinkDevice } from './TpLinkDevice';
 import { startHttpServer } from './interfaces/http';
 import { sendStatus, startWebSocketServer } from './interfaces/ws';
 import { startSwitchMonitoring } from './switch';
-import { runningEffect } from './effects';
+import { loadLightingEffects, runningEffect } from './effects';
 import config from './config.json';
-
-startHttpServer();
-startWebSocketServer();
 
 export const bulbProperties = {
     color: 1,
@@ -16,8 +13,6 @@ export const bulbProperties = {
 export const bulbs: TpLinkDevice[] = [];
 
 const bulbIps: string[] = config.mainBulbIps;
-
-console.log('Connecting to Bulbs');
 
 const scanBulbs = async () => {
     const scanner = TpLinkDevice.scan();
@@ -32,8 +27,6 @@ const scanBulbs = async () => {
     });
 };
 
-scanBulbs();
-
 const connectToBulb = async (ip: string): Promise<boolean> => {
     const bulb = new TpLinkDevice(ip);
     const info = await bulb.getStatus().catch(() => null);
@@ -46,7 +39,7 @@ const connectToBulb = async (ip: string): Promise<boolean> => {
     return true;
 };
 
-setTimeout(() => {
+const connectToAllBulbs = () => {
     bulbIps.forEach(async ip => {
         let success = false;
         while (!success) {
@@ -60,7 +53,7 @@ setTimeout(() => {
         }
     });
     startSwitchMonitoring();
-}, 1000);
+};
 
 interface BulbStatus {
     lighting: LightState & {
@@ -98,4 +91,17 @@ export const updateStatus = async (updateTime = 1000) => {
     sendStatus();
 };
 
-setInterval(updateStatus, 100);
+const main = async () => {
+    startHttpServer();
+    startWebSocketServer();
+
+    setInterval(updateStatus, 100);
+    scanBulbs();
+
+    loadLightingEffects();
+
+    console.log('Connecting to Bulbs');
+    setTimeout(connectToAllBulbs, 1000);
+};
+
+if (require.main === module) main();

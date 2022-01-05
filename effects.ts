@@ -66,8 +66,6 @@ export const sendLoadedEffects = () => {
     sendToClients({ effects });
 };
 
-loadLightingEffects();
-
 let enabledLightingEffect: string;
 
 let lightingEffectInterval: NodeJS.Timeout;
