@@ -12,7 +12,7 @@ import {
 } from '../effects';
 import { bulbs, status, updateStatus } from '../main';
 
-let ws: WebSocket.Server;
+let wsServer: WebSocket.Server;
 
 interface WebSocketClient extends WebSocket {
     alive: boolean;
@@ -21,9 +21,9 @@ interface WebSocketClient extends WebSocket {
 let lastMessage: string;
 
 export const startWebSocketServer = () => {
-    ws = new WebSocket.Server({ port: 1728 });
+    wsServer = new WebSocket.Server({ port: 1728 });
 
-    ws.on('connection', (client: WebSocketClient) => {
+    wsServer.on('connection', (client: WebSocketClient) => {
         client.send(JSON.stringify({ effects: getLoadedEffects() }));
 
         if (lastMessage) client.send(lastMessage);
@@ -89,12 +89,12 @@ export const sendToClients = (data: string | any) => {
 
     if (lastMessage === data) return;
 
-    ws.clients.forEach(client => client.send(data));
+    wsServer.clients.forEach(client => client.send(data));
     lastMessage = data;
 };
 
 setInterval(() => {
-    ws.clients.forEach((client: WebSocketClient) => {
+    (wsServer.clients as Set<WebSocketClient>).forEach(client => {
         if (!client.alive) return client.terminate();
 
         client.alive = false;

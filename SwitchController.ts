@@ -6,6 +6,7 @@ const throttle = (callback: () => void, limit: number): (() => void) => {
         // We return a throttled function
         if (!waiting) {
             // If we're not waiting
+            //@ts-ignore TODO: Fix typing
             callback.apply(this, arguments); // Execute users function
             waiting = true; // Prevent future invocations
             setTimeout(() => {
