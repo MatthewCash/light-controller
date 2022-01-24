@@ -6,7 +6,11 @@ import { setColor } from '../commands/setColor';
 import { setPower } from '../commands/setPower';
 import { setWhite } from '../commands/setWhite';
 import { setBrightness } from '../commands/setBrightness';
-import { disableLightingEffect, enableLightingEffect } from '../effects';
+import {
+    disableLightingEffect,
+    enableLightingEffect,
+    loadLightingEffects
+} from '../effects';
 
 const app = express();
 
@@ -49,6 +53,10 @@ app.post('/brightness', (req: Request, res: Response) => {
 });
 
 app.post('/effect', async (req: Request, res: Response) => {
+    if (req.body?.reload === true) {
+        loadLightingEffects();
+        return res.status(200).send('Success');
+    }
     if (req.body?.effect == null) {
         disableLightingEffect();
         return res.status(200).send('Success');
