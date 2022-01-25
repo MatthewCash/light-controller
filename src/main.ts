@@ -3,7 +3,7 @@ import { startHttpServer } from './interfaces/http';
 import { sendStatus, startWebSocketServer } from './interfaces/ws';
 import { startSwitchMonitoring } from './switch';
 import { loadLightingEffects, runningEffect } from './effects';
-import config from './config.json';
+import config from '../config.json';
 
 export const bulbProperties = {
     color: 1,

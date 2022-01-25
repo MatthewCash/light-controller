@@ -1,5 +1,5 @@
 import { SwitchController } from './SwitchController';
-import config from './config.json';
+import config from '../config.json';
 
 interface SwitchSetup {
     switchIps: string | string[];
