@@ -1,7 +1,10 @@
 import { disableLightingEffect } from '../effects';
 import { bulbs } from '../main';
 
-export const setWhite = async (cold?: boolean | number): Promise<void> => {
+export const setWhite = async (
+    cold?: boolean | number,
+    brightness?: number
+): Promise<void> => {
     disableLightingEffect();
 
     let temperature = 4500;
@@ -13,5 +16,7 @@ export const setWhite = async (cold?: boolean | number): Promise<void> => {
         temperature = Math.max(Math.min(cold, 9000), 2500);
     }
 
-    await Promise.all(bulbs.map(bulb => bulb.setWhite(temperature, true)));
+    await Promise.all(
+        bulbs.map(bulb => bulb.setWhite(temperature, true, brightness))
+    );
 };

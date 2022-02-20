@@ -162,6 +162,7 @@ export class TpLinkDevice extends EventEmitter {
     public async setWhite(
         temperature = 9000,
         setPower = true,
+        brightness?: number,
         transitionSpeed = 100,
         retry?: number
     ) {
@@ -170,6 +171,7 @@ export class TpLinkDevice extends EventEmitter {
                 ignore_default: 1,
                 color_temp: temperature,
                 transition_period: transitionSpeed,
+                ...(brightness !== null && { brightness }),
                 ...(setPower && { on_off: true })
             },
             retry
