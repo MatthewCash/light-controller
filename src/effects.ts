@@ -22,7 +22,7 @@ export const loadLightingEffects = async (): Promise<number> => {
         file => path.extname(file) === effectsFileExtension
     );
 
-    if (!files.length) {
+    if (!effectFiles.length) {
         console.warn('No valid effects in ' + effectsDir);
         return 0;
     }
@@ -41,7 +41,7 @@ export const loadLightingEffects = async (): Promise<number> => {
     await Promise.all(loadPromises);
 
     console.log(
-        `[+] ${lightingEffects.size}/${loadPromises.length} effects loaded!`
+        `[+] ${lightingEffects.size}/${effectFiles.length} effects loaded!`
     );
 
     sendLoadedEffects();
