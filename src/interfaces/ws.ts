@@ -4,6 +4,7 @@ import { setColor } from '../commands/setColor';
 import { setHueSaturation } from '../commands/setHueSaturation';
 import { setPower } from '../commands/setPower';
 import { setWhite } from '../commands/setWhite';
+import { updateAllBulbs } from '../commands/updateAllBulbs';
 import {
     disableLightingEffect,
     enableLightingEffect,
@@ -11,6 +12,7 @@ import {
     loadLightingEffects
 } from '../effects';
 import { bulbs, status, updateStatus } from '../main';
+import { UpdateData } from '../TpLinkDevice';
 
 let wsServer: WebSocket.Server;
 
@@ -46,6 +48,7 @@ interface wsData {
     setBrightness?: number;
     adjust?: boolean;
     reloadLightingEffects?: number;
+    update?: UpdateData;
 }
 
 const onMessage = async (message: string) => {
@@ -74,6 +77,9 @@ const onMessage = async (message: string) => {
             )
         );
     }
+    if (data?.update != null) {
+        actions.push(updateAllBulbs(data.update));
+    }
 
     if (data.reloadLightingEffects) {
         loadLightingEffects();
@@ -99,8 +105,9 @@ setInterval(() => {
 
         client.alive = false;
         client.ping();
+        client.send('ping');
     });
-}, 10000);
+}, 3000);
 
 export const sendStatus = () => {
     if (!bulbs[0] || !status.lighting) {

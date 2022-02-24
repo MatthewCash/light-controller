@@ -11,6 +11,7 @@ import {
     enableLightingEffect,
     loadLightingEffects
 } from '../effects';
+import { updateAllBulbs } from '../commands/updateAllBulbs';
 
 const app = express();
 
@@ -34,7 +35,7 @@ app.post('/color', (req: Request, res: Response) => {
 });
 
 app.post('/white', (req: Request, res: Response) => {
-    setWhite(req?.body?.cold);
+    setWhite(req?.body?.cold, req?.body?.brightness);
     return res.status(200).send('Success');
 });
 
@@ -49,6 +50,13 @@ app.post('/brightness', (req: Request, res: Response) => {
     if (req.body?.brightness == null)
         return res.status(400).send('Brightness not specified!');
     setBrightness(req.body.brightness, req.body.adjust);
+    return res.status(200).send('Success');
+});
+
+app.post('/update', (req: Request, res: Response) => {
+    if (req.body?.update == null)
+        return res.status(400).send('No update data provided!');
+    updateAllBulbs(req?.body?.update);
     return res.status(200).send('Success');
 });
 

@@ -22,11 +22,6 @@ export const loadLightingEffects = async (): Promise<number> => {
         file => path.extname(file) === effectsFileExtension
     );
 
-    if (!effectFiles.length) {
-        console.warn('No valid effects in ' + effectsDir);
-        return 0;
-    }
-
     lightingEffects.clear();
 
     const loadPromises = effectFiles.map(async file => {
@@ -37,6 +32,11 @@ export const loadLightingEffects = async (): Promise<number> => {
 
         lightingEffects.set(id, effect);
     });
+
+    if (!loadPromises.length) {
+        console.warn('No valid effects in ' + effectsDir);
+        return 0;
+    }
 
     await Promise.all(loadPromises);
 
