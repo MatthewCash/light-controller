@@ -243,8 +243,6 @@ export class TpLinkDevice extends EventEmitter {
             if (colorTemp > 9000) colorTemp = 9000;
 
             payload.color_temp = Math.round(colorTemp);
-        } else {
-            payload.color_temp = 0;
         }
         if (updateData.hue != null) {
             let hue = Math.round(updateData.hue);
@@ -252,6 +250,7 @@ export class TpLinkDevice extends EventEmitter {
             if (hue < 0) hue = 0;
             if (hue > 360) hue = 360;
 
+            payload.color_temp = 0;
             payload.hue = hue;
         }
         if (updateData.saturation != null) {
@@ -260,6 +259,7 @@ export class TpLinkDevice extends EventEmitter {
             if (saturation < 0) saturation = 0;
             if (saturation > 100) saturation = 100;
 
+            payload.color_temp = 0;
             payload.saturation = Math.round(saturation);
         }
 
