@@ -1,3 +1,4 @@
+import { updateAllBulbs } from './commands/updateAllBulbs';
 import { TpLinkDevice } from './TpLinkDevice';
 
 const throttle = (callback: () => void, limit: number): (() => void) => {
@@ -98,8 +99,6 @@ export class SwitchController {
             await this.bulbs[0]?.getLightingState().catch(() => null)
         )?.power;
 
-        this.bulbs.forEach(bulb =>
-            bulb.setLightingPower(!currentPower, 1000, 10)
-        );
+        this.bulbs.forEach(bulb => bulb.updateState({ power: !currentPower }));
     }
 }

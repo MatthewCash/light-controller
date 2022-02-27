@@ -1,9 +1,4 @@
 import WebSocket from 'ws';
-import { setBrightness } from '../commands/setBrightness';
-import { setColor } from '../commands/setColor';
-import { setHueSaturation } from '../commands/setHueSaturation';
-import { setPower } from '../commands/setPower';
-import { setWhite } from '../commands/setWhite';
 import { updateAllBulbs } from '../commands/updateAllBulbs';
 import {
     disableLightingEffect,
@@ -41,12 +36,7 @@ interface wsData {
         hue: number;
         saturation: number;
     };
-    setColor?: number;
-    setWhite?: number | boolean;
-    setPower?: boolean;
     setEffect?: string;
-    setBrightness?: number;
-    adjust?: boolean;
     reloadLightingEffects?: number;
     update?: UpdateData;
 }
@@ -61,22 +51,8 @@ const onMessage = async (message: string) => {
 
     const actions: Promise<void>[] = [];
 
-    if (data?.setColor != null) actions.push(setColor(data.setColor));
-    if (data?.setWhite != null) actions.push(setWhite(data.setWhite));
-    if (data?.setPower != null) actions.push(setPower(data.setPower));
     if (data?.setEffect != null) enableLightingEffect(data.setEffect);
     if (data?.setEffect === null) disableLightingEffect();
-    if (data?.setBrightness != null) {
-        actions.push(setBrightness(data.setBrightness, data.adjust));
-    }
-    if (data?.setHueSaturation != null) {
-        actions.push(
-            setHueSaturation(
-                data.setHueSaturation.hue,
-                data.setHueSaturation.saturation
-            )
-        );
-    }
     if (data?.update != null) {
         actions.push(updateAllBulbs(data.update));
     }
