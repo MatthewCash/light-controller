@@ -10,7 +10,11 @@ export const updateAllBulbs = async (
     updateData: UpdateCommandData,
     disableLightingEffects = true
 ): Promise<void> => {
-    if (disableLightingEffects) disableLightingEffect();
+    if (
+        disableLightingEffects &&
+        (updateData.colorTemp || updateData.hue || updateData.saturation)
+    )
+        disableLightingEffect();
 
     if (updateData?.adjustBrightness) {
         updateData.brightness =
