@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { updateAllBulbs } from '../commands/updateAllBulbs';
+import { updateAllBulbs, UpdateCommandData } from '../commands/updateAllBulbs';
 import {
     disableLightingEffect,
     enableLightingEffect,
@@ -7,7 +7,6 @@ import {
     loadLightingEffects
 } from '../effects';
 import { bulbs, status, updateStatus } from '../main';
-import { UpdateData } from '../TpLinkDevice';
 
 let wsServer: WebSocket.Server;
 
@@ -38,7 +37,7 @@ interface wsData {
     };
     setEffect?: string;
     reloadLightingEffects?: number;
-    update?: UpdateData;
+    update?: UpdateCommandData;
 }
 
 const onMessage = async (message: string) => {
